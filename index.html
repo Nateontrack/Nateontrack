@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Blackjack</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+    crossorigin="anonymous">
+    <link rel="stylesheet" href="styles/main.css">
+    <!--https://fonts.google.com/specimen/Libre+Baskerville?selection.family=Libre+Baskerville-->
+    <link href="https://fonts.googleapis.com/css?family=Nunito&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <button id="next-game-btn" class="btn btn-light">Next game</button>
+    <div class="container centered">
+        <div class="row">
+            <div class="col-12 col-sm-6">
+                Dealer
+                <div id="dealer-cards-container" class="flexed playing-card-container">
+                    <!--<div class="playing-card"><img id="card-dealer-1" width="80" src="images/6H.png" /></div>-->
+                </div>
+                <span class="bignumber" id="dealer-points"></span>
+            </div>
+            <div class="col-12 col-sm-6">
+                Speler
+                <div id="player-cards-container" class="flexed playing-card-container">
+                    <!--<div class="playing-card"><img id="card-dealer-1" width="80" src="images/6H.png" /></div>-->
+                </div>
+                <button id="player-hit-btn" class="btn btn-light">Hit</button>
+                <button id="player-stand-btn" class="btn btn-light">Stand</button>
+                <span class="bignumber" id="player-points"></span>
+            </div>
+            <span class="bigtext" id="game-result"></span>
+        </div>
+
+
+    <!--RamdaJS: https://ramdajs.com/docs-->
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/ramda/0.27.0/ramda.min.js"
+        integrity="sha256-b9w9dH2wg4H3c1vaJkmkV7r8AxhRan6+41iRnFB6jck="
+        crossorigin="anonymous"></script>
+
+    <!--jQuery: https://jquery.com/-->
+    <script
+        src="https://code.jquery.com/jquery-3.4.1.min.js"
+        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+        crossorigin="anonymous"></script>
+
+    <!--Bootstrap: https://getbootstrap.com/-->
+    <script
+        src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+        crossorigin="anonymous"></script>
+
+    <!--Blackjack logic-->
+    <script src="scripts/blackjack.js"></script>
+
+    <script>
+// TO DO: MAKE A POPUP, A WIN OR LOSE FUNCTION, MONEY COUNTER
+    $('#next-game-btn').click(function () {
+        startGame();
+        $('#game-result').text('')
+
+    });
+
+    startGame();
+
+
+        function startGame () {
+            let blackjack = Blackjack(2);
+
+            redraw('dealer', blackjack.players[0]);
+            redraw('player', blackjack.players[1]);
+
+            const points = pointsOfPlayer(blackjack, 1);
+            $('#player-points').text(points);
+
+            const pointsD = blackjack.players[0].cards[0].card.value
+            $('#dealer-points').text(pointsD);
+
+            if (pointsOfPlayer(blackjack, 1) === 21) {
+                $('#game-result').text('BLACKJACK! You win €75,00')
+              }
+
+            $('#player-hit-btn').click(function () {
+              if (pointsOfPlayer(blackjack, 1) < 21) {
+                blackjack = giveCardToPlayer(blackjack, 1);
+                redraw('player', blackjack.players[1]);
+                const points = pointsOfPlayer(blackjack, 1);
+                $('#player-points').text(points);
+
+                if (pointsOfPlayer(blackjack, 1) > 21) {
+                  $('#game-result').text('BUST! You lose €50,00')
+                }
+              }
+            });
+
+            $('#player-stand-btn').click(function () {
+                const points = pointsOfPlayer(blackjack, 1);
+                $('#player-points').text(points);
+
+                blackjack.players[0].cards[1].visible = true;
+                redraw('dealer', blackjack.players[0]);
+                if (pointsOfPlayer(blackjack, 1) < 21) {
+                let pointsDealer = pointsOfPlayer(blackjack, 0)
+                while (pointsDealer < 17) {
+                  blackjack = giveCardToPlayer(blackjack, 0)
+                  redraw('dealer', blackjack.players[0]);
+                  pointsDealer = pointsOfPlayer(blackjack, 0)
+                }
+              }
+
+                const pointsD = pointsOfPlayer(blackjack, 0)
+                $('#dealer-points').text(pointsD);
+
+                //add if statement that checks dealer vs player --> win lose or dealer bust
+            });
+
+            function redraw (id, player) {
+                // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals
+                $(`#${id}-cards-container`).html('');
+
+                player.cards.forEach((cardContainer) => {
+                    const card = cardContainer.card;
+                    if (cardContainer.visible) {
+                        // Images come from: https://acbl.mybigcommerce.com/52-playing-cards/
+                        $(`<div class="playing-card"><img width="80" src="images/${card.name}${card.suit.code}.png"></div>`).appendTo(`#${id}-cards-container`);
+                    } else {
+                        $(`<div class="playing-card"><img id="${card.name}${card.suit.code}" width="80" src="images/blue_back.png"></div>`).appendTo(`#${id}-cards-container`);
+                        $(`#${card.name}${card.suit.code}`).click(function () {
+                            $(`#${card.name}${card.suit.code}`).attr('src', `images/${card.name}${card.suit.code}.png`);
+                        });
+                    }
+                });
+            }
+        }
+
+
+    </script>
+</body>
+</html>
